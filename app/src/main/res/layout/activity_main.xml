@@ -4,16 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="bottom"
     tools:context=".MainActivity"
     android:orientation="vertical">
 
+
+
+
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="bottom"
         android:textStyle="bold"
         android:id="@+id/btnMaps"
         android:text="Ir al mapa"
         />
-
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:textStyle="bold"
+        android:id="@+id/btnAdd"
+        android:text="Agregar Marcador"
+        />
 </LinearLayout>

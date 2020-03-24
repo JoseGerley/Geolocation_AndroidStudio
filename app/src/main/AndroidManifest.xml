@@ -31,8 +31,9 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".Maps"
+            android:name=".MapsActivity"
             android:label="@string/title_activity_maps"></activity>
+        <activity android:name=".formularioMarcador" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

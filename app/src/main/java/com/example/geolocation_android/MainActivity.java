@@ -22,12 +22,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
-    private final int REQUEST_CODE_ASK_PERMISSION=111;
-    private FusedLocationProviderClient fusedLocationClient;
     DatabaseReference database;
-    private Button btnMaps;
+    private Button btnMaps,btnAdd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +33,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         btnMaps = findViewById(R.id.btnMaps);
         btnMaps.setOnClickListener(this);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         database = FirebaseDatabase.getInstance().getReference();
-
+        btnAdd = findViewById(R.id.btnAdd);
+        btnAdd.setOnClickListener(this);
         getLatLongFirebase();
     }
 
@@ -45,32 +43,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int perFine = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         int perCoarse = ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION);
         if(perFine != PackageManager.PERMISSION_GRANTED && perCoarse != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},REQUEST_CODE_ASK_PERMISSION);
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1000);
 
         }
-        Log.e("Prueba:", "Muestra de funcionamiento");
-        fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            Log.e("Latitud: ", location.getLatitude() + " - Longitud: " + location.getLongitude());
-                            Map<String, Object> latlong = new HashMap<>();
-                            latlong.put("latitud", location.getLatitude());
-                            latlong.put("longitud", location.getLongitude());
-                            database.child("usuarios").push().setValue(latlong);
-                        }
-                    }
-                }
-        );
+
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btnMaps:
-                Intent intent = new Intent(MainActivity.this,Maps.class);
+                Intent intent = new Intent(MainActivity.this,MapsActivity.class);
                 startActivity(intent);
                 break;
+
+            case R.id.btnAdd:
+                Intent intent2 = new Intent(MainActivity.this,formularioMarcador.class);
+                startActivity(intent2);
+                break;
         }
+
     }
 }
