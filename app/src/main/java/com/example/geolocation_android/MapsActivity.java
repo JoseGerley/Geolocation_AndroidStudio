@@ -8,6 +8,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -32,7 +34,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, View.OnClickListener {
@@ -45,7 +51,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean primero = true;
     private TextView txtUbicacion;
     private Button btnUbicarme;
-    double latitud, longitud;
+    private List<Marcadores> marcadores;
+    double latitud, longitud, dist;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,17 +62,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        Log.e("Check","UNO");
+        dist = Double.MAX_VALUE;
         database = FirebaseDatabase.getInstance().getReference();
         databaseReference = FirebaseDatabase.getInstance().getReference();
         txtUbicacion = findViewById(R.id.txtUbicacion);
         btnUbicarme = findViewById(R.id.btnUbicarme);
+        marcadores= new ArrayList<>();
         btnUbicarme.setOnClickListener(this);
-        Log.e("Check","DOS");
         generateLocation();
-        Log.e("Check","TRES");
         regisLocation();
-        Log.e("Check","CUATRO");
     }
 
 
@@ -82,11 +87,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        Log.e("Check","CINCO");
         databaseReference.child("usuarios").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.e("Check","SEIS");
                 if (actualPosition != null)
                     actualPosition.remove();
 
@@ -95,11 +98,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 MarkerOptions markerOptions = new MarkerOptions();
                 latitud = mp.getLatitud();
                 longitud = mp.getLongitud();
-                LatLng coordenadas = new LatLng(latitud, longitud);
 
-                Log.e("Check","SIETE");
+                LatLng coordenadas = new LatLng(latitud, longitud);
+                String ubi = "direccion no encontrada";
+                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                try {
+                    Address dir = geocoder.getFromLocation(latitud,longitud,1).get(0);
+                    ubi = dir.getAddressLine(0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 actualPosition = mMap.addMarker(new MarkerOptions().position(coordenadas)
-                        .title("mi posicion actual"));
+                        .title(ubi));
 
                 if(primero){
                     CameraUpdate miUbicacion = CameraUpdateFactory.newLatLngZoom(coordenadas,18);
@@ -108,9 +118,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 }
 
+                Log.e("Intervencio", "Previa");
+                for(Marcadores aux : marcadores){
+                    Log.e("Intervencio", "Media1");
+
+                    Double latAux = aux.getLatitud();
+                    Double lonAux = aux.getLongitud();
+                    Location auxMarkers = new Location("puntoMarker");
+                    auxMarkers.setLatitude(latAux);
+                    auxMarkers.setLongitude(lonAux);
+                    Location user = new Location("puntoUsuario");
+                    user.setLatitude(latitud);
+                    user.setLongitude(longitud);
+                    double dif = user.distanceTo(auxMarkers);
+                    Log.e("Diferencia", ""+dif);
+
+                    if(dif < dist){
+                        dist = dif;
+                        String douCon = String.format("%.2f",dist);
+                        txtUbicacion.setText("Punto mas cercano: "+"\n"+ aux.getNombre()+" - "+aux.getDireccion()+"\n"+"Se encuentra a "+douCon+"mts");
+                    }
+                    Log.e("Intervencio", "Media2");
+
+                }
+                Log.e("Intervencio", "Posterior");
 
 
-                Log.e("Check","OCHO");
 
             }
 
@@ -123,8 +156,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         databaseReference.child("marcadores").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.e("Check","Markerts");
+                if(!marcadores.isEmpty())
+                    marcadores.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Marcadores mp = snapshot.getValue(Marcadores.class);
+                    marcadores.add(mp);
+
                     MarkerOptions markerOptions = new MarkerOptions();
                     Double lat = mp.getLatitud();
                     Double lon = mp.getLongitud();
@@ -134,6 +172,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .title("" + mp.getNombre() + " - " + mp.getDireccion()));
 
                 }
+
+
             }
 
             @Override
@@ -143,6 +183,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.animateCamera(miUbicacion);
             }
         });
+
+
 
     }
 
@@ -171,7 +213,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btnUbicarme:
-
+                LatLng coordenadas = new LatLng(latitud, longitud);
+                CameraUpdate miUbicacion = CameraUpdateFactory.newLatLngZoom(coordenadas,18);
+                mMap.animateCamera(miUbicacion);
                 break;
         }
     }
@@ -192,13 +236,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         public void onLocationChanged(Location location) {
-            Log.e("Check","AlternativoUNO");
-            Log.e("Cambio","La direccion ha cambiado");
             Map<String, Object> latlong = new HashMap<>();
             latlong.put("latitud", location.getLatitude());
             latlong.put("longitud", location.getLongitude());
             database.child("usuarios").setValue(latlong);
-            Log.e("Check","AlternativoDOS");
 
 
         }
