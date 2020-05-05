@@ -1,3 +1,4 @@
+# GeoLocation With Android Studio
 Proyecto de geolocalizacion en android estudio, utilizando Google Maps SDK for Android, contiene los siguientes requqrimientos:
 1. Que el mapa siga mi rastro.
 2. La cámara del mapa siempre debe estar centrada en la posición del usuario.
@@ -6,6 +7,8 @@ Proyecto de geolocalizacion en android estudio, utilizando Google Maps SDK for A
 5. El cajón inferior de la aplicación debe informar cuál es el marcador de lugar más cercano al usuario. Si se encuentra muy cerca, el cajón debe indicar que el usuario se encuentra en dicho lugar.
 6. Dar click en un marcador de lugar debe informar a cuántos metros se encuentra el usuario de ese lugar.
 7. Dar click en el lugar del usuario debe decir en qué dirección se encuentra ubicado (Ej.: Calle 18, Carrera 122…).
+
+-Es necesario conectar el proyectoo con firebase
 
 
 
